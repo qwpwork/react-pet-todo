@@ -1,17 +1,18 @@
-/*
-  # TODO:
-  1. Add items
-  2. Remove checked items
-  3. Input validation
-*/
+import { useState } from 'react';
 
-import {useState} from 'react';
-
-// MUI imports
-import { Box, Button, Container, TextField } from '@mui/material';
-import { FormControl, FormHelperText, FormGroup, FormControlLabel, Checkbox } from '@mui/material'
+import { CssBaseline, ThemeProvider, createTheme } from '@mui/material'
+import { Box, Button, Container, TextField} from '@mui/material';
+import { FormControl, FormControlLabel, Checkbox } from '@mui/material'
 
 export default function App() {
+  // Interfaces
+  interface ITodoItems {
+    id: number;
+    value: string;
+    isChecked: boolean;
+  }
+
+  // States init
   const [todoItems, setTodoItems] = useState([
     { id: 0, value: "Snacks", isChecked: false },
     { id: 1, value: "Some water", isChecked: false },
@@ -21,12 +22,32 @@ export default function App() {
   const [isHasError, setIsHasError] = useState(false)
   const [helperStr, setHelperStr] = useState("");
 
+  // Methods
+
+
+  const darkTheme = createTheme({
+    palette: {
+      mode: 'dark',
+    },
+  });
+
+  /*
+    * Sets listener on input str changes. 
+    * When input value changing:
+    * 1. updating inputText state (set input value instead of state value);
+    * 2. removing error-status.
+  */
   const inputTextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setInputText(e.target.value);
     setIsHasError(false);
     setHelperStr("");
   }
 
+  /*
+    * 1. pass validation (input text isn't empty);
+    * 2. update todoItems state (add new obj to array);
+    * 3. set input value to empty "".
+  */
   const addNewItem = () => {
     if (inputText == "") {
       setIsHasError(true);
@@ -42,9 +63,31 @@ export default function App() {
       setInputText("");
     }
   };
-  
+
+  /*
+    * Removing checked items and updates todoItems state
+  */
+  const removeCheckedItems = () => {
+    setTodoItems(todoItems.filter(item => item.isChecked == false))
+  }
+
+  /*
+    @params {id: number, value: string, isChecked: boolean}
+    * update todoItems state (toggle todoItems.isChecked)
+  */
+  const isCheckedToggle = (todoItem : ITodoItems) => {
+    setTodoItems(prevState =>
+      prevState.map(item =>
+        item.id == todoItem.id
+          ? {...item, isChecked: !todoItem.isChecked }
+          : item
+      )
+    )    
+  }
+
+  // Components
   const FormField = (
-    <Box>
+    <Box sx={{mt: 5, mb: 5}}>
       <FormControl>
         <TextField 
           id="standard-basic"
@@ -59,44 +102,41 @@ export default function App() {
       <Button 
         variant="contained"
         onClick={addNewItem}
+        sx={{mt: 1, ml: 1}}
       >
         Add todo
       </Button>
     </Box>
   );
 
-  const isCheckedToggle = (item : object) => {
-    todoItems.forEach(element => {
-      if (element.id == item.id) {
-        return {...element, isChecked: !element.isChecked}
-      }
-    })
-  }
-
-  const todoList = todoItems.map((todoItem) => 
-    <FormGroup key={todoItem.id}>
+  const TodoList = todoItems.map((todoItem) => 
+    <div key={todoItem.id}>
       <FormControlLabel
-        control={<Checkbox />}
+        control={<Checkbox onClick={() => isCheckedToggle(todoItem)}/>}
         label={todoItem.value}
-        onClick={() => isCheckedToggle(todoItem)}
       />
-    </FormGroup>
+    </div>
   );
 
-  const removeCheckedItems = () => {
-    return 0;
-  }
-
+  const ClearBtn = (
+    <Button
+      className="btn"
+      variant="contained"
+      onClick={removeCheckedItems}
+      sx={{mt: 5, width: 315}}
+    >
+      Clear selected
+    </Button>
+  )
+  // Render
   return (
-    <Container>
-      {FormField}
-      {todoList}
-      <Button
-        variant="contained"
-        onClick={removeCheckedItems}
-      >
-        Remove checked
-      </Button>
-    </Container>
+    <ThemeProvider theme={darkTheme}>
+      <CssBaseline />
+      <Container>
+        {FormField}
+        {TodoList}
+        {ClearBtn}
+      </Container>
+    </ThemeProvider>
   )
 }
